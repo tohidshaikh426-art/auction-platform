@@ -1,13 +1,19 @@
 const express = require("express");
 const router = express.Router();
 
+// Mock data store (in memory, will reset with each function invocation)
+let mockItems = [
+  { id: 1, name: "Smartphone", basePrice: 50, currentBid: 50, auctionIndex: 1, isActive: true, category: "technology", status: "active", bidCount: 0, image: "/images/phone.png" },
+  { id: 2, name: "Laptop", basePrice: 100, currentBid: 100, auctionIndex: 2, isActive: true, category: "technology", status: "active", bidCount: 0, image: "/images/laptop.png" },
+  { id: 3, name: "Headphones", basePrice: 30, currentBid: 30, auctionIndex: 3, isActive: true, category: "technology", status: "active", bidCount: 0, image: "/images/headphones.png" }
+];
+
+let mockBids = [];
+
 // Get all auction items
-router.get("/items", async (req, res) => {
+router.get("/items", (req, res) => {
   try {
-    const items = await req.Item.findAll({
-      order: [['auctionIndex', 'ASC']]
-    });
-    res.json(items);
+    res.json(mockItems);
   } catch (error) {
     console.error("Error fetching items:", error);
     res.status(500).json({ error: "Failed to fetch items" });
@@ -15,7 +21,7 @@ router.get("/items", async (req, res) => {
 });
 
 // Place a bid
-router.post("/:id/bid", async (req, res) => {
+router.post("/:id/bid", (req, res) => {
   try {
     const { id } = req.params;
     const { userId, amount } = req.body;
@@ -26,7 +32,7 @@ router.post("/:id/bid", async (req, res) => {
     }
 
     // Find the item
-    const item = await req.Item.findByPk(id);
+    const item = mockItems.find(item => item.id == id);
     if (!item) {
       return res.status(404).json({ error: "Item not found" });
     }
@@ -36,57 +42,28 @@ router.post("/:id/bid", async (req, res) => {
       return res.status(400).json({ error: "Bid amount must be higher than current bid" });
     }
 
-    // Find the user
-    const user = await req.User.findByPk(userId);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    // Create the bid
+    const bid = {
+      id: mockBids.length + 1,
+      amount,
+      bidderId: userId,
+      itemId: parseInt(id),
+      createdAt: new Date().toISOString()
+    };
+    
+    mockBids.push(bid);
 
-    // Check if user has enough money
-    if (user.wallet < amount) {
-      return res.status(400).json({ error: "Insufficient funds" });
-    }
+    // Update the item with new bid
+    item.currentBid = amount;
+    item.winnerId = userId;
+    item.bidCount = (item.bidCount || 0) + 1;
 
-    // Start a transaction to ensure data consistency
-    const transaction = await req.sequelize.transaction();
-
-    try {
-      // Create the bid
-      const bid = await req.Bid.create({
-        amount,
-        bidderId: userId,
-        itemId: id
-      }, { transaction });
-
-      // Update the item with new bid
-      await req.Item.update({
-        currentBid: amount,
-        winnerId: userId
-      }, {
-        where: { id },
-        transaction
-      });
-
-      // Deduct from user's wallet
-      await req.User.update({
-        wallet: user.wallet - amount
-      }, {
-        where: { id: userId },
-        transaction
-      });
-
-      await transaction.commit();
-
-      // Respond with success
-      res.json({
-        message: "Bid placed successfully",
-        bid: bid.toJSON(),
-        updatedItem: await req.Item.findByPk(id)
-      });
-    } catch (err) {
-      await transaction.rollback();
-      throw err;
-    }
+    // Respond with success
+    res.json({
+      message: "Bid placed successfully",
+      bid,
+      updatedItem: item
+    });
   } catch (error) {
     console.error("Error placing bid:", error);
     res.status(500).json({ error: "Failed to place bid" });
@@ -94,21 +71,13 @@ router.post("/:id/bid", async (req, res) => {
 });
 
 // Get bid history for an item
-router.get("/history/:id", async (req, res) => {
+router.get("/history/:id", (req, res) => {
   try {
     const { id } = req.params;
     
-    const bids = await req.Bid.findAll({
-      where: { itemId: id },
-      include: [{
-        model: req.User,
-        as: 'bidder',
-        attributes: ['id', 'username']
-      }],
-      order: [['createdAt', 'DESC']]
-    });
+    const itemBids = mockBids.filter(bid => bid.itemId == id);
     
-    res.json(bids);
+    res.json(itemBids);
   } catch (error) {
     console.error("Error fetching bid history:", error);
     res.status(500).json({ error: "Failed to fetch bid history" });
@@ -116,21 +85,13 @@ router.get("/history/:id", async (req, res) => {
 });
 
 // Get user's bid history
-router.get("/user/:userId", async (req, res) => {
+router.get("/user/:userId", (req, res) => {
   try {
     const { userId } = req.params;
     
-    const bids = await req.Bid.findAll({
-      where: { bidderId: userId },
-      include: [{
-        model: req.Item,
-        as: 'item',
-        attributes: ['id', 'name', 'image']
-      }],
-      order: [['createdAt', 'DESC']]
-    });
+    const userBids = mockBids.filter(bid => bid.bidderId == userId);
     
-    res.json(bids);
+    res.json(userBids);
   } catch (error) {
     console.error("Error fetching user bids:", error);
     res.status(500).json({ error: "Failed to fetch user bids" });
