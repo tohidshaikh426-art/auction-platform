@@ -18,7 +18,9 @@ const app = express();
 const server = http.createServer(app);
 
 // CORS configuration
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || ["http://localhost:5173", "http://localhost:3000"];
+const allowedOrigins =
+  process.env.ALLOWED_ORIGINS?.split(",") ||
+  ["http://localhost:5173", "http://localhost:3000"];
 
 const io = new Server(server, {
   cors: {
@@ -33,10 +35,12 @@ const io = new Server(server, {
   },
 });
 
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.static("public")); // Serve images and static files
 
@@ -52,9 +56,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/bids", bidRoutes);
 
-// Sync DB and seed
-const { itemImages, PRODUCT_ITEMS, TECH_ITEMS } = require("./utils/itemData");
-
+// Sync DB and seed (run once, not on every request)
 sequelize.sync({ force: false }).then(async () => {
   const adminExists = await User.findOne({ where: { role: "admin" } });
   if (!adminExists) {
@@ -65,6 +67,7 @@ sequelize.sync({ force: false }).then(async () => {
     });
   }
 
+  const { itemImages, PRODUCT_ITEMS, TECH_ITEMS } = require("./utils/itemData");
   const allItems = [...PRODUCT_ITEMS, ...TECH_ITEMS];
 
   for (let i = 0; i < allItems.length; i++) {
@@ -89,13 +92,16 @@ sequelize.sync({ force: false }).then(async () => {
   }
 
   console.log("✅ 50 auction items seeded.");
-
 });
 
 // Socket.IO auction logic
 require("./sockets/auction")(io, Item, Bid, User, Log, sequelize);
 
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`Auction server running on port ${PORT}`);
-});
+// ✅ Do NOT do this on Vercel:
+// const PORT = process.env.PORT || 5000;
+// server.listen(PORT, () => {
+//   console.log(`Auction server running on port ${PORT}`);
+// });
+
+// ✅ Export app/server so Vercel can handle it.
+module.exports = { app, server };
