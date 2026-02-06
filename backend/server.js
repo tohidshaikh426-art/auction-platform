@@ -37,9 +37,21 @@ const adminRoutes = require("./routes/admin");
 const bidRoutes = require("./routes/bids");
 
 // Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/bids", bidRoutes);
+app.use("/api/auth", (req, res, next) => {
+  req.models = { User, Item, Bid, Log };
+  req.sequelize = sequelize;
+  next();
+}, authRoutes);
+app.use("/api/admin", (req, res, next) => {
+  req.models = { User, Item, Bid, Log };
+  req.sequelize = sequelize;
+  next();
+}, adminRoutes);
+app.use("/api/bids", (req, res, next) => {
+  req.models = { User, Item, Bid, Log };
+  req.sequelize = sequelize;
+  next();
+}, bidRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

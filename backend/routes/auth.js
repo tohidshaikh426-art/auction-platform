@@ -2,8 +2,6 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const validator = require("validator");
-const { sequelize } = require("../config/db");
-const User = require("../models/User")(sequelize, require("sequelize").DataTypes);
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this";
@@ -28,11 +26,11 @@ router.post("/login", async (req, res) => {
       }
 
       // Find or create admin user
-      let adminUser = await User.findOne({ where: { role: "admin" } });
+      let adminUser = await req.User.findOne({ where: { role: "admin" } });
       
       if (!adminUser) {
         // Create admin on first login
-        adminUser = await User.create({
+        adminUser = await req.User.create({
           username: ADMIN_CREDENTIAL,
           password: await bcrypt.hash("admin_internal_secret", 10),
           role: "admin",
@@ -66,11 +64,11 @@ router.post("/login", async (req, res) => {
       }
 
       // Find or create bidder
-      let bidder = await User.findOne({ where: { username: credential, role: "bidder" } });
+      let bidder = await req.User.findOne({ where: { username: credential, role: "bidder" } });
 
       if (!bidder) {
         // Auto-create bidder account
-        bidder = await User.create({
+        bidder = await req.User.create({
           username: credential,
           password: await bcrypt.hash(`bidder_${credential}_secret`, 10),
           role: "bidder",
@@ -113,7 +111,7 @@ router.get("/me", async (req, res) => {
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await User.findByPk(decoded.id);
+    const user = await req.User.findByPk(decoded.id);
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
