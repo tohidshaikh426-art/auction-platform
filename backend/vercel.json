@@ -12,5 +12,8 @@
       "dest": "server.js"
     }
   ],
-  "regions": ["iad1"]
+  "regions": ["iad1"],
+  "env": {
+    "VERCEL": "1"
+  }
 }

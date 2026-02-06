@@ -2,10 +2,11 @@ const { Sequelize } = require("sequelize");
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const NODE_ENV = process.env.NODE_ENV || "development";
+const VERCEL = process.env.VERCEL || false;
 
 let sequelize;
 
-if (DATABASE_URL && NODE_ENV === "production") {
+if (DATABASE_URL && (NODE_ENV === "production" || VERCEL)) {
   // On Vercel: use Supabase (PostgreSQL)
   sequelize = new Sequelize(DATABASE_URL, {
     dialect: "postgres",

@@ -107,12 +107,16 @@ sequelize.sync({ force: false }).then(async () => {
 // Socket.IO auction logic
 require("./sockets/auction")(io, Item, Bid, User, Log, sequelize);
 
-// ✅ Do NOT do this on Vercel:
-// const PORT = process.env.PORT || 5000;
-// server.listen(PORT, () => {
-//   console.log(`Auction server running on port ${PORT}`);
-// });
-
-// ✅ Export a handler that Vercel can invoke
+// Handle serverless function for Vercel
 const serverless = require("serverless-http");
-module.exports = serverless(app);
+
+// For local development
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
+  server.listen(PORT, () => {
+    console.log(`Auction server running on port ${PORT}`);
+  });
+} else {
+  // For Vercel deployment
+  module.exports = serverless(app);
+}
