@@ -155,6 +155,12 @@ app.use("/api/bids", bidRoutes);
   }
 })();
 
+// Initialize associations
+User.hasMany(Bid, { foreignKey: "bidderId" });
+Bid.belongsTo(User, { foreignKey: "bidderId" });
+Item.hasMany(Bid, { foreignKey: "itemId" });
+Bid.belongsTo(Item, { foreignKey: "itemId" });
+
 // Handle serverless function for Vercel
 const serverless = require("serverless-http");
 
@@ -210,12 +216,6 @@ if (require.main === module) {
     });
   });
   
-  // Initialize associations
-  User.hasMany(Bid, { foreignKey: "bidderId" });
-  Bid.belongsTo(User, { foreignKey: "bidderId" });
-  Item.hasMany(Bid, { foreignKey: "itemId" });
-  Bid.belongsTo(Item, { foreignKey: "itemId" });
-  
   // Initialize socket logic
   require("./sockets/auction")(io, Item, Bid, User, Log, sequelize);
   
@@ -225,10 +225,5 @@ if (require.main === module) {
   });
 } else {
   // For Vercel deployment - only API routes, no Socket.IO for now
-  User.hasMany(Bid, { foreignKey: "bidderId" });
-  Bid.belongsTo(User, { foreignKey: "bidderId" });
-  Item.hasMany(Bid, { foreignKey: "itemId" });
-  Bid.belongsTo(Item, { foreignKey: "itemId" });
-  
   module.exports = serverless(app);
 }
