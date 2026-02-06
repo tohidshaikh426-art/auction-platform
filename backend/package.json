@@ -4,7 +4,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "seed": "node seed.js"
+    "seed": "node seed.js",
+    "vercel-build": "npm install",
+    "postinstall": "npm audit fix || true"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

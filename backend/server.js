@@ -67,42 +67,48 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/bids", bidRoutes);
 
 // Sync DB and seed (run once, not on every request)
-sequelize.sync({ force: false }).then(async () => {
-  const adminExists = await User.findOne({ where: { role: "admin" } });
-  if (!adminExists) {
-    await User.create({
-      username: "admin",
-      password: "$2b$10$...", // hash this in real code
-      role: "admin",
-    });
+(async () => {
+  try {
+    await sequelize.sync({ force: false });
+    
+    const adminExists = await User.findOne({ where: { role: "admin" } });
+    if (!adminExists) {
+      await User.create({
+        username: "admin",
+        password: "$2b$10$...", // hash this in real code
+        role: "admin",
+      });
+    }
+
+    const { itemImages, PRODUCT_ITEMS, TECH_ITEMS } = require("./utils/itemData");
+    const allItems = [...PRODUCT_ITEMS, ...TECH_ITEMS];
+
+    for (let i = 0; i < allItems.length; i++) {
+      const itemName = allItems[i];
+      const category = PRODUCT_ITEMS.includes(itemName) ? "product" : "technology";
+      const imageName = itemImages[itemName];
+      const imagePath = imageName ? `/images/${imageName}` : null;
+
+      await Item.findOrCreate({
+        where: { auctionIndex: i + 1 },
+        defaults: {
+          name: itemName,
+          basePrice: 50,
+          currentBid: 50,
+          auctionIndex: i + 1,
+          isActive: true,
+          category,
+          status: "pending",
+          image: imagePath,
+        },
+      });
+    }
+
+    console.log("✅ 50 auction items seeded.");
+  } catch (error) {
+    console.error("Database seeding error:", error);
   }
-
-  const { itemImages, PRODUCT_ITEMS, TECH_ITEMS } = require("./utils/itemData");
-  const allItems = [...PRODUCT_ITEMS, ...TECH_ITEMS];
-
-  for (let i = 0; i < allItems.length; i++) {
-    const itemName = allItems[i];
-    const category = PRODUCT_ITEMS.includes(itemName) ? "product" : "technology";
-    const imageName = itemImages[itemName];
-    const imagePath = imageName ? `/images/${imageName}` : null;
-
-    await Item.findOrCreate({
-      where: { auctionIndex: i + 1 },
-      defaults: {
-        name: itemName,
-        basePrice: 50,
-        currentBid: 50,
-        auctionIndex: i + 1,
-        isActive: true,
-        category,
-        status: "pending",
-        image: imagePath,
-      },
-    });
-  }
-
-  console.log("✅ 50 auction items seeded.");
-});
+})();
 
 // Socket.IO auction logic
 require("./sockets/auction")(io, Item, Bid, User, Log, sequelize);
