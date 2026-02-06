@@ -51,6 +51,16 @@ Bid.belongsTo(User, { foreignKey: "bidderId" });
 Item.hasMany(Bid, { foreignKey: "itemId" });
 Bid.belongsTo(Item, { foreignKey: "itemId" });
 
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || "development",
+    database: DATABASE_URL ? "postgres" : "sqlite"
+  });
+});
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);

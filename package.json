@@ -1,10 +1,34 @@
 {
-  "name": "auction-platform-root",
+  "name": "auction-platform",
+  "version": "1.0.0",
+  "description": "Auction Platform - Vercel + Supabase Deployment Configuration",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix frontend\" \"npm start --prefix backend\""
+    "dev": "concurrently \"npm run dev --prefix frontend\" \"npm start --prefix backend\"",
+    "deploy:setup": "powershell -ExecutionPolicy Bypass -File deploy.ps1",
+    "deploy:setup:unix": "bash deploy.sh",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/auction-platform.git"
+  },
+  "keywords": [
+    "auction",
+    "real-time",
+    "socket.io",
+    "react",
+    "nodejs",
+    "vercel",
+    "supabase"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
 }

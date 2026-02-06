@@ -8,6 +8,11 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+.env.production
+.env.development
+backend/.env*
+frontend/.env*
+*.env
 
 # Build outputs
 backend/database.sqlite
