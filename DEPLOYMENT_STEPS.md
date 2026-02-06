@@ -1,9 +1,10 @@
-# Auction Platform Deployment Guide - Vercel + Supabase
+# Auction Platform Deployment Guide - Railway + Supabase + Vercel
 
 ## Prerequisites
 - Node.js installed
 - GitHub account
-- Vercel account (can sign up with GitHub)
+- Railway account (for backend)
+- Vercel account (for frontend)
 - Supabase account
 
 ## Step 1: Create Supabase Database
@@ -48,44 +49,40 @@
    git push -u origin main
    ```
 
-## Step 4: Deploy Backend to Vercel
+## Step 4: Deploy Backend to Railway
+
+1. Go to [https://railway.app](https://railway.app) and sign in
+2. Click "New Project"
+3. Select "Deploy from GitHub repo"
+4. Select your `auction-platform` repository
+5. Select the `backend` directory
+6. Add Environment Variables:
+   ```
+   DATABASE_URL=your_supabase_connection_string_here
+   JWT_SECRET=your_random_jwt_secret_here
+   NODE_ENV=production
+   ALLOWED_ORIGINS=https://your-frontend.vercel.app
+   ```
+
+7. Click "Deploy"
+
+## Step 5: Deploy Frontend to Vercel
 
 1. Go to [https://vercel.com](https://vercel.com) and sign in with GitHub
 2. Click "New Project"
 3. Select your `auction-platform` repository
 4. Configure settings:
-   - **Root Directory**: `backend`
-   - **Framework Preset**: Other
-   - **Build Command**: `npm install`
-   - **Output Directory**: (leave empty)
-   - **Install Command**: `npm install`
-
-5. Add Environment Variables:
-   ```
-   DATABASE_URL=your_supabase_connection_string_here
-   JWT_SECRET=your_random_jwt_secret_here
-   ALLOWED_ORIGINS=https://your-frontend.vercel.app
-   NODE_ENV=production
-   ```
-
-6. Click "Deploy"
-
-## Step 5: Deploy Frontend to Vercel
-
-1. In Vercel, click "New Project" again
-2. Select the same `auction-platform` repository
-3. Configure settings:
    - **Root Directory**: `frontend`
    - **Framework Preset**: Vite
    - **Build Command**: `npm run build`
    - **Output Directory**: `dist`
 
-4. Add Environment Variables:
+5. Add Environment Variables:
    ```
-   VITE_API_URL=https://your-backend-url.vercel.app
+   VITE_API_URL=https://your-backend-railway-app-name.up.railway.app
    ```
 
-5. Click "Deploy"
+6. Click "Deploy"
 
 ## Step 6: Update Configuration Files
 

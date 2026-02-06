@@ -33,7 +33,8 @@ Make sure you have:
 - Node.js 18+ installed
 - Git installed
 - GitHub account
-- Vercel account (can use GitHub login)
+- Railway account (for backend - supports real-time features)
+- Vercel account (for frontend)
 - Supabase account
 
 ### 2. **Run Automated Setup (Recommended)**

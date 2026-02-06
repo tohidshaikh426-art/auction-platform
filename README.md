@@ -84,7 +84,13 @@ VITE_API_URL=http://localhost:5000
 
 ## ☁️ Deployment
 
-### Deploy to Vercel with Supabase
+### Deploy with Railway + Supabase + Vercel
+
+For a fully functional auction platform with real-time features:
+
+- **Backend**: Deploy to Railway (supports persistent connections for real-time features)
+- **Frontend**: Deploy to Vercel (static site hosting)
+- **Database**: Use Supabase (PostgreSQL)
 
 Follow the detailed deployment guide in [DEPLOYMENT_STEPS.md](DEPLOYMENT_STEPS.md)
 
