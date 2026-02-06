@@ -16,11 +16,6 @@ const allowedOrigins =
   process.env.ALLOWED_ORIGINS?.split(",") ||
   ["http://localhost:5173", "http://localhost:3000"];
 
-// Routes
-const authRoutes = require("./routes/auth");
-const adminRoutes = require("./routes/admin");
-const bidRoutes = require("./routes/bids");
-
 app.use(
   cors({
     origin: allowedOrigins,
@@ -160,6 +155,16 @@ User.hasMany(Bid, { foreignKey: "bidderId" });
 Bid.belongsTo(User, { foreignKey: "bidderId" });
 Item.hasMany(Bid, { foreignKey: "itemId" });
 Bid.belongsTo(Item, { foreignKey: "itemId" });
+
+// Routes
+const authRoutes = require("./routes/auth");
+const adminRoutes = require("./routes/admin");
+const bidRoutes = require("./routes/bids");
+
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/bids", bidRoutes);
 
 // Handle serverless function for Vercel
 const serverless = require("serverless-http");
