@@ -52,9 +52,27 @@ Item.hasMany(Bid, { foreignKey: "itemId" });
 Bid.belongsTo(Item, { foreignKey: "itemId" });
 
 // Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/bids", bidRoutes);
+app.use("/api/auth", (req, res, next) => {
+  req.User = User;
+  req.Item = Item;
+  req.Bid = Bid;
+  req.Log = Log;
+  next();
+}, authRoutes);
+app.use("/api/admin", (req, res, next) => {
+  req.User = User;
+  req.Item = Item;
+  req.Bid = Bid;
+  req.Log = Log;
+  next();
+}, adminRoutes);
+app.use("/api/bids", (req, res, next) => {
+  req.User = User;
+  req.Item = Item;
+  req.Bid = Bid;
+  req.Log = Log;
+  next();
+}, bidRoutes);
 
 // Sync DB and seed (run once, not on every request)
 sequelize.sync({ force: false }).then(async () => {
