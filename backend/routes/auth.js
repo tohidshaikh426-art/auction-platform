@@ -2,6 +2,8 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const validator = require("validator");
+const { sequelize } = require("../config/db");
+const User = require("../models/User")(sequelize, require("sequelize").DataTypes);
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this";
@@ -25,13 +27,18 @@ router.post("/login", async (req, res) => {
         return res.status(401).json({ error: "Invalid admin credential" });
       }
 
-      // Mock admin user
-      const adminUser = {
-        id: 1,
-        username: credential,
-        role: "admin",
-        wallet: 100000
-      };
+      // Find or create admin user
+      let adminUser = await User.findOne({ where: { role: "admin" } });
+      
+      if (!adminUser) {
+        // Create admin on first login
+        adminUser = await User.create({
+          username: ADMIN_CREDENTIAL,
+          password: await bcrypt.hash("admin_internal_secret", 10),
+          role: "admin",
+          wallet: 100000,
+        });
+      }
 
       // Generate token
       const token = jwt.sign(
@@ -43,7 +50,12 @@ router.post("/login", async (req, res) => {
       return res.json({
         message: "Admin login successful",
         token,
-        user: adminUser
+        user: {
+          id: adminUser.id,
+          username: adminUser.username,
+          role: adminUser.role,
+          wallet: adminUser.wallet,
+        },
       });
     }
 
@@ -53,13 +65,18 @@ router.post("/login", async (req, res) => {
         return res.status(400).json({ error: "CC name must be 2-50 characters" });
       }
 
-      // Mock bidder user
-      const bidder = {
-        id: Date.now(), // Simple mock ID
-        username: credential,
-        role: "bidder",
-        wallet: 10000
-      };
+      // Find or create bidder
+      let bidder = await User.findOne({ where: { username: credential, role: "bidder" } });
+
+      if (!bidder) {
+        // Auto-create bidder account
+        bidder = await User.create({
+          username: credential,
+          password: await bcrypt.hash(`bidder_${credential}_secret`, 10),
+          role: "bidder",
+          wallet: 10000, // Initial wallet
+        });
+      }
 
       // Generate token
       const token = jwt.sign(
@@ -71,7 +88,12 @@ router.post("/login", async (req, res) => {
       return res.json({
         message: "Bidder login successful",
         token,
-        user: bidder
+        user: {
+          id: bidder.id,
+          username: bidder.username,
+          role: bidder.role,
+          wallet: bidder.wallet,
+        },
       });
     }
 
@@ -91,16 +113,18 @@ router.get("/me", async (req, res) => {
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    
-    // Mock user response
-    const user = {
-      id: decoded.id,
-      username: decoded.role === "admin" ? "ITCS Committee" : `bidder_${decoded.id}`,
-      role: decoded.role,
-      wallet: decoded.role === "admin" ? 100000 : 10000
-    };
+    const user = await User.findByPk(decoded.id);
 
-    res.json(user);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      wallet: user.wallet,
+    });
   } catch (err) {
     res.status(401).json({ error: "Invalid token" });
   }
