@@ -103,5 +103,6 @@ require("./sockets/auction")(io, Item, Bid, User, Log, sequelize);
 //   console.log(`Auction server running on port ${PORT}`);
 // });
 
-// ✅ Export app/server so Vercel can handle it.
-module.exports = { app, server };
+// ✅ Export a handler that Vercel can invoke
+const serverless = require("serverless-http");
+module.exports = serverless(app);
